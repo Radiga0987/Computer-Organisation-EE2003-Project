@@ -7,6 +7,10 @@ module dmem (
     input [31:0] dwdata,
     input [3:0] dwe,
     output [31:0] drdata
+    input [31:0] mm_daddr,
+    input [255:0] mm_dwdata,
+    input mm_dwe,
+    output [255:0] mm_drdata
 );
     // 4K location, 16KB total, split in 4 banks
     reg [7:0] mem0[0:4095];  
@@ -15,6 +19,7 @@ module dmem (
     reg [7:0] mem3[0:4095];  
 
     wire [29:0] a;
+    wire [29:0] b;
     
 
     initial begin 
@@ -34,6 +39,22 @@ module dmem (
         if (dwe[2]) mem2[a] = dwdata[23:16];
         if (dwe[1]) mem1[a] = dwdata[15: 8];
         if (dwe[0]) mem0[a] = dwdata[ 7: 0];
+    end
+
+
+    assign b = mm_daddr[31:2];
+
+    for (i=0;i<8;i=i+1)
+		assign mm_drdata[i*32:i*32+31]={ mem3[b+i], mem2[b+i], mem1[b+i], mem0[b+i]};
+
+    always @(posedge clk) begin
+        for (i=0;i<8;i=i+1)
+            if (mm_dwe) begin
+                mem3[b+i] = mm_dwdata[31+i*32:24+i*32];
+                mem2[b+i] = mm_dwdata[23+i*32:16+i*32];
+                mem1[b+i] = mm_dwdata[15+i*32: 8+i*32];
+                mem0[b+i] = mm_dwdata[ 7+i*32: 0+i*32];
+            end
     end
 
 
