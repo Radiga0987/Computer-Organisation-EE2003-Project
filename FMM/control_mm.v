@@ -4,10 +4,12 @@ module control_mm(
 	input reset,
 	input [255:0]dim,
 	input dim_we,		//Comes from cpu_mm
-	output [31:0]dimensions;
+	output mm_en,
+	output [31:0]dimensions,
 	output [31:0]dmem_addr
 );
 
+reg mm_en;
 reg [31:0] addr_bnk [0:6];
 reg [31:0] dimensions;
 reg [31:0] dmem_addr;
@@ -18,8 +20,8 @@ reg [31:0] dmem_addr;
 		for (i=3;i<7;i=i+1)
 			addr_bnk[i] = 32'b0;
 		addr_bnk[0] = 32'h0000_0000;		//0
-		addr_bnk[1] = 32'h0000_0500;		//1280
-		addr_bnk[2] = 32'h0000_0A00;		//2560
+		addr_bnk[1] = 32'h0000_1400;		//5120
+		addr_bnk[2] = 32'h0000_2800;		//10240
 		dimensions = 0;
     end	
 
@@ -37,8 +39,9 @@ reg [31:0] dmem_addr;
 	end
 	// A= mxn dim[10:0]xdim[21:11], B=nxo dim[21:11]xdim[31:22]
     always @(inst) begin
+		mm_en = 0;
 		case(inst)
-			0: dmem_addr=//const value for dim_addr
+			0: dmem_addr=32'h0000_3C00	//const value for dim_addr = 15360
 			
 			1: begin
 				dmem_addr=addr_bnk[0]+addr_bnk[4]; //load next a
@@ -68,9 +71,9 @@ reg [31:0] dmem_addr;
 				end
 				end
 
-			4:  //for matrix multiply enable
+			4:  mm_en = 1;		//for matrix multiply enable
 
-		default:dmem_addr=//const value for dim_addr
+		default:dmem_addr=0;//const value for dim_addr
 
 		endcase
 

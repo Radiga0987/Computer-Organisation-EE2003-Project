@@ -2,8 +2,6 @@ module cpu_mm(
 	input clk,
     input reset,
 	input operation_en,		// Enable for accelerator to do its job
-    //input addr_we_i, // write enable from control.v
-    //output addr_we_o,   // write enable to control_mm.v (delaying clk cycle)	
 	input mm_drdata,
 	output active,
 	output [255:0] mm_dwdata,
@@ -11,10 +9,12 @@ module cpu_mm(
 	output [31:0] mm_daddr
 
 );
+	wire mm_en;
     wire [31:0] dmem_addr;
 	wire [255:0] a,b,c,co;
 	control_mm cntr_mm(
 		.inst(inst),
+		.mm_en(mm_en),
 		.reset(reset),
 		.dim(mm_drdata),
 		.dim_we(dim_we),
@@ -35,6 +35,7 @@ module cpu_mm(
 	);
 
 	matrix_ops mm_ops(
+		.mm_en(mm_en),
 		.mm_op(mm_opcounter),
 		.a(a),
 		.b(b),
@@ -57,6 +58,8 @@ module cpu_mm(
 		counter=0;
 		mm_opcounter=0;
 		stc = 0;
+		mm_dwdata = 0;
+		mm_dwe = 0;
     end	
 
 	always @(operation_en, mm_complete, reset) begin
@@ -74,6 +77,8 @@ module cpu_mm(
 			rd_rf <=0;
 			we_rf <=0;
 			dim_we <=0;
+			mm_dwdata <= 0;
+			mm_dwe <= 0;
 		end
 		else begin
 			if (counter == 0) begin
@@ -81,15 +86,20 @@ module cpu_mm(
 				dim_we<=1;
 				stc <= 0;
 				rd_rf <=0;	
-				we_rf <=0;			
+				we_rf <=0;
+				mm_dwdata <= 0;
+				mm_dwe <= 0;
+				counter <= counter+1;
 			end
 			else if (counter == 17*dimensions[21:11]/8+1) begin	//STORE C
 				inst <= 3;
-				counter <= 0;
+				counter <= 1;
 				we_rf <= 0;
 				dim_we <=0;
 				stc <= 1;
-
+				rd_rf <=0;
+				mm_dwdata <= c;
+				mm_dwe <= 1;
 			end
 			else if ((counter % 17) == 1) begin 	//Load A
 				inst<=1;	
@@ -97,6 +107,9 @@ module cpu_mm(
 				rd_rf <=0;
 				stc <= 0;
 				dim_we <=0;
+				mm_dwdata <= 0;
+				mm_dwe <= 0;
+				counter <= counter+1;
 			end
 			else if ((counter % 17) % 2 == 0) begin		//Load B
 				inst <= 2;	
@@ -104,6 +117,9 @@ module cpu_mm(
 				rd_rf <=1;
 				stc <= 0;
 				dim_we <=0;
+				mm_dwdata <= 0;
+				mm_dwe <= 0;
+				counter <= counter+1;
 			end 
 			else if((counter % 17) % 2 == 1) begin
 				inst <= 4;		//Matrix Mul
@@ -111,10 +127,13 @@ module cpu_mm(
 				rd_rf <=2;
 				stc <= 0;
 				dim_we <=0;
+				mm_dwdata <= 0;
+				mm_dwe <= 0;
+				counter <= counter+1;
 				if (mm_opcounter == 8) mm_opcounter <= 1;
 				else mm_opcounter <= mm_opcounter + 1;
 			end 
-			counter <= counter+1;
+			
 		end
  	end
 

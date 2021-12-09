@@ -165,7 +165,7 @@ module control ( input reset,           // reset
 						jmp = 1'b0;
 						operation_en = 1'b0;
 						end
-			7'b______:	begin  //Accelerator MM
+			7'b1111111:	begin  //Accelerator MM
 						dMEMToReg = 1'b0;
 						aluop = 5'd0;
 						r1 = 5'd0;
