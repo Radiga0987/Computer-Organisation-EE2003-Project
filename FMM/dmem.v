@@ -6,8 +6,7 @@ module dmem (
     input [31:0] daddr,
     input [31:0] dwdata,
     input [3:0] dwe,
-    output [31:0] drdata
-    input [31:0] mm_daddr,
+    output [31:0] drdata,
     input [255:0] mm_dwdata,
     input mm_dwe,
     output [255:0] mm_drdata
@@ -42,7 +41,7 @@ module dmem (
     end
 
 
-    assign b = mm_daddr[31:2];
+    assign b = daddr[31:2];
 
     for (i=0;i<8;i=i+1)
 		assign mm_drdata[i*32:i*32+31]={ mem3[b+i], mem2[b+i], mem1[b+i], mem0[b+i]};

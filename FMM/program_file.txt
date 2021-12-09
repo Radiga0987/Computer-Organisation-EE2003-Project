@@ -1,8 +1,0 @@
-cpu.v
-cpu_tb.v
-dmem.v
-imem.v
-regfile.v
-alu.v
-imm_gen.v
-control.v
