@@ -19,13 +19,14 @@ module dmem (
 
     wire [29:0] a;
     wire [29:0] b;
+    integer i;
     
 
     initial begin 
-        $readmemh({`TESTDIR,"/data0.mem"}, mem0); 
-        $readmemh({`TESTDIR,"/data1.mem"}, mem1); 
-        $readmemh({`TESTDIR,"/data2.mem"}, mem2); 
-        $readmemh({`TESTDIR,"/data3.mem"}, mem3); 
+        $readmemh("data_mem/data0.mem", mem0); 
+        $readmemh("data_mem/data1.mem", mem1); 
+        $readmemh("data_mem/data2.mem", mem2); 
+        $readmemh("data_mem/data3.mem", mem3); 
     end
 
     assign a = daddr[31:2];
@@ -42,9 +43,11 @@ module dmem (
 
 
     assign b = daddr[31:2];
-
-    for (i=0;i<8;i=i+1)
-		assign mm_drdata[i*32:i*32+31]={ mem3[b+i], mem2[b+i], mem1[b+i], mem0[b+i]};
+    always @(*) begin
+        for (i=0;i<8;i=i+1)
+            mm_drdata[i*32:i*32+31]={ mem3[b+i], mem2[b+i], mem1[b+i], mem0[b+i]};
+    end
+    
 
     always @(posedge clk) begin
         for (i=0;i<8;i=i+1)

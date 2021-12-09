@@ -9,6 +9,6 @@ iverilog -o dut cpu_tb.v cpu.v dmem.v imem.v regfile.v alu.v imm_gen.v control.v
 
 ./dut  #vvp dut
 
+cat << EOF 
+DO-NE
 EOF
-
-return $retval 

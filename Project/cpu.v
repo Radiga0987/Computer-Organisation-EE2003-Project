@@ -18,7 +18,7 @@ module cpu ( input clk,             // clock
 	wire [4:0] r1, r2, rd ,aluop;
 	wire [31:0] wdata, r1rf, r2rf, r1alu, r2alu, out_alu, imm,mm_daddr;
     wire [255:0] mm_dw_data; 
-    reg [31:0] drdatarf;
+    reg [31:0] drdatarf,daddr;
 
     // dmem related inputs and outputs
     reg [3:0] dwe_temp;
@@ -130,12 +130,16 @@ module cpu ( input clk,             // clock
 	//Assigning appropriate values for all wires and regs
     assign r1alu = (idata[6:0] == 7'b1101111 | idata[6:0] == 7'b1100111) ? iaddr+32'd4 : (idata[6:0] == 7'b0010111) ? iaddr : r1rf;
     assign r2alu = (regOrImm) ? imm : r2rf;
-	assign daddr = (active) ? mm_daddr  : out_alu;
     assign wdata = (dMEMToReg) ? drdatarf : out_alu;
 	assign dwdata = repeatdata;
     assign dwe = ~reset & dwe_temp;
     assign mm_dwdata = mm_dw_data;
     assign mm_dwe = mm_d_we;
+    
+    always @(out_alu,mm_daddr) begin
+        if (active) daddr = mm_daddr;
+        else daddr = out_alu;
+    end
 
     always @(idata, daddr) begin
 		// Store related instructions

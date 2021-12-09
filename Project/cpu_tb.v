@@ -63,6 +63,7 @@ module cpu_tb ();
         for (i=0; i<1000; i=i+1) begin
             @(posedge clk);
         end
+        $finish;
     end
     
 endmodule

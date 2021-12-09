@@ -63,6 +63,7 @@ module cpu_mm(
 		stc = 0;
 		mm_dwdata = 0;
 		mm_dwe = 0;
+        active = 0;
     end	
 
 	always @(operation_en, mm_complete, reset) begin
