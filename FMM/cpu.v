@@ -5,15 +5,19 @@ module cpu ( input clk,             // clock
 			 output [31:0] daddr,   // data address if dmem is used
 			 input [31:0] drdata,   // data read from dmem
 			 output [31:0] dwdata,  // write value to dmem
-			 output [3:0] dwe       // dmem write enable signals
+			 output [3:0] dwe,       // dmem write enable signals
+             output [255:0] mm_dwdata,
+             output mm_dwe,
+             input [255:0] mm_drdata
            );
 
 	reg [31:0] iaddr; // instruction address
 
     // regfile,alu and imm_gen related outputs and inputs
-    wire regWrite, dMEMToReg, regOrImm, jmp, br;
+    wire regWrite, dMEMToReg, regOrImm, jmp, br,active,mm_d_we,operation_en;
 	wire [4:0] r1, r2, rd ,aluop;
-	wire [31:0] wdata, r1rf, r2rf, r1alu, r2alu, out_alu, imm;
+	wire [31:0] wdata, r1rf, r2rf, r1alu, r2alu, out_alu, imm,mm_daddr;
+    wire [255:0] mm_dw_data,mm_dr_data; 
     reg [31:0] drdatarf;
 
     // dmem related inputs and outputs
@@ -84,7 +88,8 @@ module cpu ( input clk,             // clock
         .regOrImm(regOrImm),
 		.regWrite(regWrite),
 		.br(br),
-		.jmp(jmp)
+		.jmp(jmp),
+        .operation_en(operation_en)
     );
 
     imm_gen ig(
@@ -110,14 +115,28 @@ module cpu ( input clk,             // clock
 		.r1(r1rf),
 		.r2(r2rf)
     );
-	
+
+    cpu_mm accelerator(
+        .clk(clk),
+        .reset(reset),
+        .operation_en(operation_en), //copmes from control.v
+        .mm_dwdata(mm_dw_data),
+        .mm_dwe(mm_d_we),
+        .mm_drdata(mm_dr_data),
+        .mm_daddr(mm_daddr),
+        .active(active)
+    )
+
 	//Assigning appropriate values for all wires and regs
     assign r1alu = (idata[6:0] == 7'b1101111 | idata[6:0] == 7'b1100111) ? iaddr+32'd4 : (idata[6:0] == 7'b0010111) ? iaddr : r1rf;
     assign r2alu = (regOrImm) ? imm : r2rf;
-	assign daddr = out_alu;
+	assign daddr = (active) ? mm_daddr  : out_alu;
     assign wdata = (dMEMToReg) ? drdatarf : out_alu;
 	assign dwdata = repeatdata;
     assign dwe = ~reset & dwe_temp;
+    assign mm_dwdata = mm_dw_data;
+    assign mm_dwe = mm_d_we;
+    assign mm_drdata = mm_dr_data;
 
     always @(idata, daddr) begin
 		// Store related instructions

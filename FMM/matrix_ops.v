@@ -7,7 +7,7 @@ module matrix_ops(
 	output [255:0] co
 );
 	reg [255:0] co;
-	always @(mm_op, a, b) begin
+	always @(mm_op, a, b, cin) begin
 		case(mm_op)
 			0: co=a[31:0]*b + cin;
 				
@@ -25,7 +25,8 @@ module matrix_ops(
 			
 			7: co=a[255:224]*b + cin;
 			
-			8:
+			8: co=0;
+			
 			default: co=cin;
 		  endcase
 		end

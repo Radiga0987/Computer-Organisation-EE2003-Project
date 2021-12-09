@@ -1,24 +1,124 @@
 module cpu_mm(       
 	input clk,
     input reset,
-    input addr_we_i, // write enable from control.v
-    //output addr_we_o,   // write enable to control_mm.v (delaying clk cycle)
-    input [31:0]dim_addr,
-    output [5:0]opcode
+	input operation_en,		// Enable for accelerator to do its job
+    //input addr_we_i, // write enable from control.v
+    //output addr_we_o,   // write enable to control_mm.v (delaying clk cycle)	
+	input mm_drdata,
+	output active,
+	output [255:0] mm_dwdata,
+    output mm_dwe,
+	output [31:0] mm_daddr
+
 );
-    reg [255:0] a_addr,b_addr,c_addr;
-    reg [31:0] dim_addr_mem;
-    integer i;
-    initial begin
-			dim_addr_mem = 32'b0;
+    wire [31:0] dmem_addr;
+	wire [255:0] a,b,c,co;
+	control_mm cntr_mm(
+		.inst(inst),
+		.reset(reset),
+		.dim(mm_drdata),
+		.dim_we(dim_we),
+		.dimensions(dimensions),
+		.dmem_addr(dmem_addr)		
+	);
+
+	regfile_mm rf_mm(
+		.rd_rf(rd_rf),
+		.we_rf(we_rf),
+		.clk(clk),
+		.reset(reset),
+		.wdata_mm(rf_wdata),	
+		.stc(stc),
+		.a(a),
+		.b(b),
+		.c(c)
+	);
+
+	matrix_ops mm_ops(
+		.mm_op(mm_opcounter),
+		.a(a),
+		.b(b),
+		.cin(c),
+		.co(co)
+	);
+
+	reg active, mm_complete, dim_we, we_rf, stc; //active = 0 => module disabled, = 1 => module enabled
+	reg [31:0] dimensions;		//route from control_mm - addr_bnk[3]
+	reg [12:0] counter;
+	reg [10:0] mm_opcounter;	
+	reg [2:0] inst;				//Sent to control_mm as inst
+	reg [1:0] rd_rf;
+	reg [255:0] rf_wdata;
+
+	assign mm_daddr = dmem_addr;
+
+	initial begin
+		inst=5;
+		counter=0;
+		mm_opcounter=0;
+		stc = 0;
     end	
 
+	always @(operation_en, mm_complete, reset) begin
+		if (operation_en == 1) active = 1;
+		else if (mm_complete == 1) active = 0;
+		//else if (reset) active = 0;
+	end
+
 	always @(posedge clk) begin
-		if (reset)  //All registers set to 0 if reset=1
-			dim_addr_mem <= 32'b0;
-		else begin
-			if (addr_we_i == 1'b1) begin  // if write enable is 1 then write
-				dim_addr_mem <= dim_addr;
-			end
+		if (active == 0)  begin
+			inst <= 5;
+			counter <= 0;
+			mm_opcounter <= 0;
+			stc <= 0;
+			rd_rf <=0;
+			we_rf <=0;
+			dim_we <=0;
 		end
+		else begin
+			if (counter == 0) begin
+				inst<=0;
+				dim_we<=1;
+				stc <= 0;
+				rd_rf <=0;	
+				we_rf <=0;			
+			end
+			else if (counter == 17*dimensions[21:11]/8+1) begin	//STORE C
+				inst <= 3;
+				counter <= 0;
+				we_rf <= 0;
+				dim_we <=0;
+				stc <= 1;
+
+			end
+			else if ((counter % 17) == 1) begin 	//Load A
+				inst<=1;	
+				we_rf <=1;
+				rd_rf <=0;
+				stc <= 0;
+				dim_we <=0;
+			end
+			else if ((counter % 17) % 2 == 0) begin		//Load B
+				inst <= 2;	
+				we_rf <=1;
+				rd_rf <=1;
+				stc <= 0;
+				dim_we <=0;
+			end 
+			else if((counter % 17) % 2 == 1) begin
+				inst <= 4;		//Matrix Mul
+				we_rf <=1;
+				rd_rf <=2;
+				stc <= 0;
+				dim_we <=0;
+				if (mm_opcounter == 8) mm_opcounter <= 1;
+				else mm_opcounter <= mm_opcounter + 1;
+			end 
+			counter <= counter+1;
+		end
+ 	end
+
+	always @(co or mm_drdata) begin
+		if (inst == 4) rf_wdata = co;
+		else rf_wdata = mm_drdata;
 	end

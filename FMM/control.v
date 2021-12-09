@@ -8,10 +8,11 @@ module control ( input reset,           // reset
                  output regOrImm,       // read from regfile or ALU
                  output regWrite,       // regfile write signal
 				 output br,             // signal for branch
-                 output jmp             // signal for jump
+                 output jmp,             // signal for jump
+				 output operation_en	//enable for matrix op
                );
 
-    reg dMEMToReg, regOrImm, regWrite, br, jmp;
+    reg dMEMToReg, regOrImm, regWrite, br, jmp, operation_en;
     reg [4:0] aluop;
     reg [4:0] r1, r2, rd;
 
@@ -28,6 +29,7 @@ module control ( input reset,           // reset
 						regWrite = 1'b1;
 						br = 1'b0;
 						jmp = 1'b0;
+						operation_en = 1'b0;
 						end
 
 			7'b1100011: begin  //BRANCH
@@ -55,6 +57,7 @@ module control ( input reset,           // reset
 						rd = 5'd0;
 						regOrImm = 1'b0;
 						regWrite = 1'b0;
+						operation_en = 1'b0;
 						end
 
 			7'b1101111: begin  //JAL
@@ -67,6 +70,7 @@ module control ( input reset,           // reset
 						rd = idata[11:7];
 						regOrImm = 1'b0;
 						regWrite = 1'b1;
+						operation_en = 1'b0;
 						end
 
 			7'b1100111: begin  //JALR
@@ -79,6 +83,7 @@ module control ( input reset,           // reset
 						rd = idata[11:7];
 						regOrImm = 1'b0;
 						regWrite = 1'b1;
+						operation_en = 1'b0;
 						end
 
 			7'b0100011: begin  //STORE
@@ -91,6 +96,7 @@ module control ( input reset,           // reset
 						regWrite = 1'b0;
 						br = 1'b0;
 						jmp = 1'b0;
+						operation_en = 1'b0;
 						end
 
 			7'b0000011: begin  //LOAD
@@ -103,6 +109,7 @@ module control ( input reset,           // reset
 						regWrite = 1'b1;
 						br = 1'b0;
 						jmp = 1'b0;
+						operation_en = 1'b0;
 						end		
 
 			7'b0010011: begin  //IMMEDIATE
@@ -129,6 +136,7 @@ module control ( input reset,           // reset
 						regWrite = 1'b1;
 						br = 1'b0;
 						jmp = 1'b0;
+						operation_en = 1'b0;
 						end
 
 			7'b0110011: begin  //ALU OPS
@@ -155,8 +163,20 @@ module control ( input reset,           // reset
 						regWrite = 1'b1;
 						br = 1'b0;
 						jmp = 1'b0;
+						operation_en = 1'b0;
 						end
-
+			7'b______:	begin  //Accelerator MM
+						dMEMToReg = 1'b0;
+						aluop = 5'd0;
+						r1 = 5'd0;
+						r2 = 5'd0;
+						rd = 5'd0;
+						regOrImm = 1'b0;
+						regWrite = 1'b0;
+						br = 1'b0;
+						jmp = 1'b0;
+						operation_en = 1'b1;
+						end
 				default: begin // everything is 0
 						dMEMToReg = 1'b0;
 						aluop = 5'd0;
@@ -167,6 +187,7 @@ module control ( input reset,           // reset
 						regWrite = 1'b0;
 						br = 1'b0;
 						jmp = 1'b0;
+						operation_en = 1'b0;
 						end
 			endcase
 		end
