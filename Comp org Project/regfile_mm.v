@@ -1,11 +1,11 @@
-module regfile_mm (	 input [1:0] rd_rf,      // write address 
+module regfile_mm (	 input [1:0] rd_rf,      // write address in regfile
 					 input we_rf,            // write enable
 					 input clk,           // clock
 					 input reset,         // reset
-					 input [255:0] wdata_mm,  // write data
-					 output [255:0] a,    // input A
-				     output [255:0] b,    // input B
-				     output [255:0] c     // input C
+					 input [255:0] wdata_mm,  // write data from dmem and matrix_ops
+					 output [255:0] a,    // 8 words of A to be sent to matrix_ops.v
+				     output [255:0] b,    // 8 words of B to be sent to matrix_ops.v
+				     output [255:0] c     // 8 words of C to be sent to matrix_ops.v
 );
 	
 	reg [255:0] regs [0:2];

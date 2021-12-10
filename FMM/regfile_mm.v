@@ -1,12 +1,12 @@
-module regfile_mm (	 input [1:0] rd_rf,      // write address 
+module regfile_mm (	 input [1:0] rd_rf,      // write address in regfile
 					 input we_rf,            // write enable
 					 input clk,           // clock
 					 input reset,         // reset
-					 input stc,				//FLush C
-					 input [255:0] wdata_mm,  // write data
-					 output [255:0] a,    // First address read value
-				     output [255:0] b,    // Second address read value
-				     output [255:0] c     //
+					 input stc,				// Used to flush c in regfile everytime we store it in dmem
+					 input [255:0] wdata_mm,  // write data from dmem and matrix_ops 
+					 output [255:0] a,    // 8 words of a to be sent to matrix_ops.v
+				     output [255:0] b,    // 8 words of b to be sent to matrix_ops.v
+				     output [255:0] c     // 8 words of c be sent to matrix_ops.v
 );
 	
 	reg [255:0] regs [0:2];
@@ -31,7 +31,7 @@ module regfile_mm (	 input [1:0] rd_rf,      // write address
 		end
     end
 	
-	//Assigning outputs r1 and r2 appropriately
+	//Assigning outputs a, b and c appropriately
 	assign a = regs[0];
 	assign b = regs[1];
 	assign c = regs[2];

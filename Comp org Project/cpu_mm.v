@@ -1,12 +1,12 @@
 module cpu_mm(       
-	input clk,				//clk
-    input reset,			//reset
+	input clk,				// Clk
+    input reset,			// Reset
 	input operation_en,		// Enable for accelerator to do its job
-    input [255:0] mm_drdata,	//Load values of matrices A and B from Dmem
-	output active,				//active = 0 => module disabled, = 1 => module enabled
-	output [255:0] mm_dwdata,	//Store values of matric C to Dmem
-    output mm_dwe,			//Dmem write enable
-	output [31:0] mm_daddr	//Dmem address
+    input [255:0] mm_drdata,	// Load values of matrices A and B from Dmem
+	output active,				// Active = 0 => module disabled, active = 1 => module enabled
+	output [255:0] mm_dwdata,	// Store values of matric C to Dmem
+    output mm_dwe,			// Dmem write enable
+	output [31:0] mm_daddr	// Dmem address
 
 );
 	wire mm_en;
@@ -98,7 +98,7 @@ module cpu_mm(
 				mm_dwe <= 0;
 				counter <= counter+1;
 			end
-            else if (counter == 17*dimensions[21:11]/8+1) begin		//STORE C
+            else if (counter == 17*dimensions[21:11]/8+1) begin		// Stall a cycle and Store C in the next cycle
 				inst <= 3;
 				counter <= counter+1;
 				we_rf <= 0;
@@ -108,7 +108,7 @@ module cpu_mm(
 				mm_dwdata <= 0;
 				mm_dwe <= 0;
 			end
-            else if (counter == 17*dimensions[21:11]/8+2) begin		//Flushing regfile to compute next 8 elements of C
+            else if (counter == 17*dimensions[21:11]/8+2) begin		// Flushing regfile to compute next 8 elements of C and store C in dmem
                 inst <= 5;
 				counter <= 1;
 				we_rf <= 1;
@@ -118,7 +118,7 @@ module cpu_mm(
 				mm_dwdata <= c;
 				mm_dwe <= 1;
             end
-            else if ((counter % 17) == 1) begin 	//Load 8 elements of matrix A
+            else if ((counter % 17) == 1) begin 	// Load 8 elements of matrix A
 				inst<=1;	
 				we_rf <=1;
 				rd_rf <=0;
@@ -128,7 +128,7 @@ module cpu_mm(
 				mm_dwe <= 0;
 				counter <= counter+1;
 			end
-            else if ((counter % 18) % 2 == 0) begin		//Load 8 elements of a row of matrix B
+            else if ((counter % 18) % 2 == 0) begin		// Load 8 elements of a row of matrix B
 				inst <= 2;	
 				we_rf <=1;
 				rd_rf <=1;
