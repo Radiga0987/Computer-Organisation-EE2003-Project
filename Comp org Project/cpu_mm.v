@@ -39,7 +39,6 @@ module cpu_mm(
 		.clk(clk),
 		.reset(reset),
 		.wdata_mm(rf_wdata),
-		.stc(stc),
 		.a(a),
 		.b(b),
 		.c(c)
@@ -60,7 +59,7 @@ module cpu_mm(
 
 	//Initialise to default values
 	initial begin
-		inst=5;
+		inst=6;
 		counter=0;
 		mm_opcounter=0;
 		stc = 0;
@@ -77,7 +76,7 @@ module cpu_mm(
 
 	always @(posedge clk) begin
 		if (active == 0)  begin		//Module inactive
-			inst <= 5;
+			inst <= 6;
 			counter <= 0;
 			mm_opcounter <= 0;
 			stc <= 0;
@@ -128,7 +127,19 @@ module cpu_mm(
 				mm_dwe <= 0;
 				counter <= counter+1;
 			end
-            else if ((counter % 18) % 2 == 0) begin		// Load 8 elements of a row of matrix B
+            else if(((counter % 17) % 2 == 1) || ((counter % 17 )== 0))begin  //Matrix Mul
+				inst <= 4;		
+				we_rf <=1;
+				rd_rf <=2;
+				stc <= 0;
+				dim_we <=0;
+				mm_dwdata <= 0;
+				mm_dwe <= 0;
+				counter <= counter+1;
+				if (mm_opcounter == 8) mm_opcounter <= 1;
+				else mm_opcounter <= mm_opcounter + 1;
+			end 
+            else if ((counter % 17) % 2 == 0) begin		//Load B
 				inst <= 2;	
 				we_rf <=1;
 				rd_rf <=1;
@@ -138,24 +149,11 @@ module cpu_mm(
 				mm_dwe <= 0;
 				counter <= counter+1;
 			end 
-            else if((counter % 18) % 2 == 1) begin		//Matrix Multiply
-				inst <= 4;		
-				we_rf <=1;
-				rd_rf <=2;
-				stc <= 0;
-				dim_we <=0;
-				mm_dwdata <= 0;
-				mm_dwe <= 0;
-				counter <= counter+1;
-				if (mm_opcounter == 8) mm_opcounter <= 1;		//Decipher which element of A to be used for matrix multiply(mm_op)
-				else mm_opcounter <= mm_opcounter + 1;
-			end 
-			
 		end
  	end
 
 	//Updating Register file with the appropriate value
-    always @(co or mm_drdata or inst or stc) begin
+    always @(co or mm_drdata or inst) begin
         if (stc==0) begin
             if (inst == 4) rf_wdata = co;
             else rf_wdata = mm_drdata;

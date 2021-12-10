@@ -43,12 +43,7 @@ module dmem (
 
 
     assign b = daddr[31:2];
-    /* 
-    always @(*) begin
-        for (i=0;i<8;i=i+1)
-            mm_drdata[i*32:i*32+31]={ mem3[b+i], mem2[b+i], mem1[b+i], mem0[b+i]};
-    end   */
-    
+    // Assigning 8 words that are to be read from dmem
     assign mm_drdata[31:0]={ mem3[b], mem2[b], mem1[b], mem0[b]};
     assign mm_drdata[63:32]={ mem3[b+1], mem2[b+1], mem1[b+1], mem0[b+1]};
     assign mm_drdata[95:64]={ mem3[b+2], mem2[b+2], mem1[b+2], mem0[b+2]};
@@ -60,16 +55,7 @@ module dmem (
 
     
     always @(posedge clk) begin
-        /*
-        for (i=0;i<8;i=i+1)
-            if (mm_dwe) begin
-                mem3[b+i] = mm_dwdata[31+i*32:24+i*32];
-                mem2[b+i] = mm_dwdata[23+i*32:16+i*32];
-                mem1[b+i] = mm_dwdata[15+i*32: 8+i*32];
-                mem0[b+i] = mm_dwdata[ 7+i*32: 0+i*32];
-            end
-        */
-        
+        // Writing 8 words into dmem
         if (mm_dwe) begin
             
             $display("%d",mm_dwdata[31:0]);

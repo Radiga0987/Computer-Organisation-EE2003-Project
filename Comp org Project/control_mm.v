@@ -74,7 +74,7 @@ reg [31:0] dmem_addr;
 				end
 				end	
 
-			3:begin									// Computing Address for storing element of C
+			3:begin									// Computing Address for storing element of C in stall cycle
 				dmem_addr=addr_bnk[2]+addr_bnk[6]; 	// Address of C to be stored 
 				addr_bnk[6]=addr_bnk[6]+32;			// By default address increments to next 8 words
 				if(addr_bnk[6]==4*addr_bnk[3][10:0]*addr_bnk[3][31:22])begin // When all of C is stored ---> matrix multiplication is complete 
@@ -83,7 +83,7 @@ reg [31:0] dmem_addr;
 				end
 
 			4:  mm_en = 1;		//Enable set for matrix multiplication
-
+			5: dmem_addr = addr_bnk[2]+addr_bnk[6]; //For store C
 		default:dmem_addr=0; //const value for dim_addr
 		endcase
 	end

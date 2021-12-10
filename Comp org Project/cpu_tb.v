@@ -1,14 +1,9 @@
 `timescale 1ns/1ns 
 
-// This test bench will run for a fixed 1000 clock cycles and then dump out the memory
-// Test cases are such that they should finish within this time
+// This test bench will run for a fixed 2000 clock cycles and then dump out the memory
 // If the CPU continues after this point, it should not result in changes in data
 // Safe to assume that imem contains only 0 after the last instruction
 
-// MACROS:
-// A single parameter is passed into the code, 
-// which is the path to the files imem.mem, dmem0-3.mem and expout.mem
-// Test cases ensure the files are named appropriately
 module cpu_tb ();
     
     reg  clk, reset;
