@@ -1,6 +1,10 @@
+//Move stack pointer up
+08000113
+// Actual program begins here
 00
 00
 00
+ffffffff
 00
 00
 00
@@ -569,6 +573,9 @@
 00
 00
 00
+//Last line of main is changed to prevent the program from looping
+//We instead jump to the instructions after <red>
+//00008067
 00
 00
 00
@@ -1134,6 +1141,7 @@
 00
 00
 00
+//End of actual program. What follows is to make it easy to check your register values
 00
 00
 00
@@ -3837,8 +3845,6 @@
 00
 00
 00
-00
-04
 00
 00
 00
